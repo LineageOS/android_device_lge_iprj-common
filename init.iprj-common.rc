@@ -65,29 +65,24 @@ on early-init
     symlink /storage/sdcard /mnt/sdcard
     symlink /storage/sdcard /storage/sdcard0
 
+on fs
+    wait /dev/block/mmcblk0
+    mkdir /system
+    mkdir /persist 0771 system system
+    mkdir /mpt 0771 system system
+    mkdir /tombstones 0771 system system
+    mkdir /tombstones/modem 0771 system system
+    mkdir /tombstones/mdm 0771 system system
+    mkdir /tombstones/lpass 0771 system system
+    mkdir /firmware 0771 system system
+    mkdir /mm 0771 system system
+    mount_all fstab.iprj
+    exec /system/bin/sh /system/etc/init.qcom.modem_links.sh
+    exec /system/bin/sh /system/etc/init.qcom.mdm_links.sh
+
 on init
 # Backward compatibility
     symlink /system/bin /bin
-
-on fs
-    mkdir /system
-    wait /dev/block/mmcblk0p30
-    wait /dev/block/mmcblk0p12
-    wait /dev/block/mmcblk0p28
-    mkdir /persist 0771 system system
-    mkdir /mpt 0771 system system
-    wait /dev/block/mmcblk0p31
-   mkdir /tombstones 0771 system system
-
-   mkdir /tombstones/modem 0771 system system
-   mkdir /tombstones/mdm 0771 system system
-   mkdir /tombstones/lpass 0771 system system
-   mkdir /firmware 0771 system system
-   wait /dev/block/mmcblk0p1
-    mount_all ./fstab.iprj
-   exec /system/bin/sh /system/etc/init.qcom.modem_links.sh
-
-
 
 on post-fs
     # mpt partition attribute
@@ -172,8 +167,10 @@ service kickstart /system/bin/qcks l
 on property:ro.baseband=csfb
     wait /dev/ttyHSL1
     mkdir /data/qcks 0770 system system
-    exec /system/bin/sh /system/etc/init.qcom.mdm_links.sh
     start kickstart
+
+on property:dev.bootcomplete=1
+    exec /system/bin/sh /system/etc/init.qcom.baseband.sh
 
 service mpdecision /system/bin/mpdecision --no_sleep --avg_comp
     class main
